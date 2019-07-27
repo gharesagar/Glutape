@@ -1,4 +1,4 @@
-package com.example.administrator.glutape;
+package com.company.glu.glutape;
 
 import org.junit.Test;
 

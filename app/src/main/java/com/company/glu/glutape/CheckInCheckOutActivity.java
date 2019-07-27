@@ -1,16 +1,16 @@
-package com.example.administrator.glutape;
+package com.company.glu.glutape;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TabHost;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -31,55 +31,95 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import connectivity.ConnectivityReceiver;
 import services.ApiConstants;
 import services.AppController;
 import services.SessionManager;
 
-public class CheckInCheckOutActivity extends AppCompatActivity implements View.OnClickListener {
+public class CheckInCheckOutActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
 
-    Button btCheckIn,btCheckOut;
+    Button btCheckIn, btCheckOut;
     SessionManager sessionManager;
-    HashMap<String,String> checkInData,empData;
+    HashMap<String, String> checkInData, empData;
     String status;
     ProgressDialog progress;
-    String remarks;
-    String empId;
+    String remarks, empId, reason;
+    private Spinner spReason;
+    private String[] reasonList = {"Select reason", "Order taken", "Complaint", "Collection", "Unproductive"};
+    private View view;
+    private EditText edtRemarks;
+    private boolean isConnected;
+
+    Button btLogout;
+
+
+    private void checkConnection() {
+        isConnected = ConnectivityReceiver.isConnected(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_in_check_out);
 
-        btCheckIn=findViewById(R.id.btCheckIn);
-        btCheckOut=findViewById(R.id.btCheckOut);
+        initViews();
 
-        sessionManager=new SessionManager(CheckInCheckOutActivity.this);
-        checkInData=new HashMap<>();
-        empData=new HashMap<>();
-        checkInData=sessionManager.getCheckIndetails();
-        status=checkInData.get(SessionManager.KEY_STATUS);
+        sessionManager = new SessionManager(CheckInCheckOutActivity.this);
+        checkInData = new HashMap<>();
+        empData = new HashMap<>();
+        checkInData = sessionManager.getCheckIndetails();
+        status = checkInData.get(SessionManager.KEY_STATUS);
 
-        empData=sessionManager.getEmpdetails();
-        empId=empData.get(SessionManager.KEY_EMPID);
+        empData = sessionManager.getEmpdetails();
+        empId = empData.get(SessionManager.KEY_EMPID);
 
-        if(status.equalsIgnoreCase("CheckIN")){
+        if (status.equalsIgnoreCase("CheckIN")) {
             btCheckIn.setVisibility(View.GONE);
             btCheckOut.setVisibility(View.VISIBLE);
-        }else {
+        } else {
+            //not check In
             btCheckIn.setVisibility(View.VISIBLE);
-            btCheckOut.setVisibility(View.VISIBLE);
+            btCheckOut.setVisibility(View.GONE);
         }
+
+        loadResonList();
 
         btCheckIn.setOnClickListener(this);
         btCheckOut.setOnClickListener(this);
+        spReason.setOnItemSelectedListener(this);
+
+        btLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sessionManager.logoutUser();
+                Intent i = new Intent(CheckInCheckOutActivity.this, LoginActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(i);
+            }
+        });
+    }
+
+    private void loadResonList() {
+        ArrayAdapter<String> aa = new ArrayAdapter<String>(CheckInCheckOutActivity.this, android.R.layout.simple_spinner_item, reasonList);
+        aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spReason.setAdapter(aa);
+    }
+
+    private void initViews() {
+        btCheckIn = findViewById(R.id.btCheckIn);
+        btCheckOut = findViewById(R.id.btCheckOut);
+        spReason = findViewById(R.id.spReason);
+        view = findViewById(R.id.view);
+        edtRemarks = findViewById(R.id.edtRemarks);
+        btLogout=findViewById(R.id.btLogout);
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.btCheckIn:
-                Intent intent=new Intent(CheckInCheckOutActivity.this,SelectDisributerDealerActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                Intent intent = new Intent(CheckInCheckOutActivity.this, SelectDisributerDealerActivity.class);
+                //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 break;
 
@@ -92,12 +132,40 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
 
     private void openCheckoutDialog() {
 
-        final View view = LayoutInflater.from(this).inflate(R.layout.remark_layout, null);
+        if(view.getVisibility()==View.GONE){
+            view.setVisibility(View.VISIBLE);
+        }else {
+
+            reason = spReason.getSelectedItem().toString().trim();
+            remarks = edtRemarks.getText().toString().trim();
+
+            if (edtRemarks.getVisibility() == View.GONE) {
+                remarks = "N.A";
+            }else if(remarks.isEmpty()){
+                Toast.makeText(this, "add remarks", Toast.LENGTH_SHORT).show();
+            }
+
+            if (reason.equalsIgnoreCase("Select reason")) {
+                Toast.makeText(this, "Select reason", Toast.LENGTH_SHORT).show();
+            } else {
+
+                checkConnection();
+                if (isConnected) {
+
+                    checkOut();
+                } else {
+
+                    Toast.makeText(CheckInCheckOutActivity.this, "No internet!!", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+
+        }
+
+    /*    final View view = LayoutInflater.from(this).inflate(R.layout.remark_layout, null);
         final AlertDialog alertDialog = new AlertDialog.Builder(CheckInCheckOutActivity.this).create();
         alertDialog.setCancelable(false);
-
         final EditText edtRemarks =  view.findViewById(R.id.edtRemarks);
-
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -114,7 +182,7 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
 
 
         alertDialog.setView(view);
-        alertDialog.show();
+        alertDialog.show();*/
     }
 
     private void checkOut() {
@@ -125,12 +193,12 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
                 try {
 
                     JSONObject jsonObject = new JSONObject(response);
-                    Boolean error = jsonObject.getBoolean("Error");
+                    boolean error = jsonObject.getBoolean("Error");
                     String msg = jsonObject.getString("Message");
 
                     if (error) {
                         progress.dismiss();
-                        Toast.makeText(CheckInCheckOutActivity.this,msg,Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CheckInCheckOutActivity.this, msg, Toast.LENGTH_SHORT).show();
 
                     } else {
                         progress.dismiss();
@@ -138,15 +206,16 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
                        /* String checkInId = jsonObject.getString("Date");
                         String time=jsonObject.getString("Time");
                         String remark = jsonObject.getString("Remark");
-                        int empId=jsonObject.getInt("EmpID");
+                        int empUsername=jsonObject.getInt("EmpID");
                         String date=jsonObject.getString("Date");*/
-                        String status=jsonObject.getString("Status");
+                        String status = jsonObject.getString("Status");
 
-
-                        sessionManager.checkInDistributorSession("","","","",status);
+                        sessionManager.checkInDistributorSession("", "", "", "", status);
                         btCheckIn.setVisibility(View.VISIBLE);
                         btCheckOut.setVisibility(View.GONE);
-                        Toast.makeText(CheckInCheckOutActivity.this,msg,Toast.LENGTH_SHORT).show();
+                        view.setVisibility(View.GONE);
+
+                        Toast.makeText(CheckInCheckOutActivity.this, msg, Toast.LENGTH_SHORT).show();
                     }
 
                 } catch (JSONException e) {
@@ -184,14 +253,14 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
 
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> loginParams = new HashMap<>();
-                loginParams.put("CheckOutDate", "12-03-2019");
-                loginParams.put("CheckoutTime", "12:00 PM");
-                loginParams.put("Remark", remarks);
-                loginParams.put("EmpID", empId);
-                return loginParams;
+                Map<String, String> params = new HashMap<>();
+                params.put("CheckOutDate", "03/29/2019");
+                params.put("CheckoutTime", "12:00 PM");
+                params.put("Remark", remarks);
+                params.put("EmpID", empId);
+                params.put("Reason", reason);
+                return params;
             }
-
         };
 
 
@@ -202,7 +271,24 @@ public class CheckInCheckOutActivity extends AppCompatActivity implements View.O
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         AppController.getInstance().addToRequestQueue(stringRequest);
-        progress = ProgressDialog.show(this, "CHECKOUT",
+        progress = ProgressDialog.show(this, "CHECK OUT",
                 "Please wait..", true);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+        if (reasonList[1].equalsIgnoreCase(spReason.getSelectedItem().toString())) {
+            edtRemarks.setVisibility(View.VISIBLE);
+        } else {
+            edtRemarks.setVisibility(View.GONE);
+        }
+
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        view.setVisibility(View.GONE);
+        edtRemarks.setVisibility(View.GONE);
     }
 }

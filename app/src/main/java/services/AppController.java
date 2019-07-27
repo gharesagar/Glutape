@@ -1,15 +1,14 @@
 package services;
 
-import android.app.AlarmManager;
-import android.app.Application;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.multidex.MultiDex;
+import androidx.multidex.MultiDexApplication;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
 import connectivity.ConnectivityReceiver;
@@ -18,19 +17,11 @@ import connectivity.ConnectivityReceiver;
  * Created by Android on 19-04-2018.
  */
 
-public class AppController extends Application {
+public class AppController  extends MultiDexApplication {
 
     public static final String TAG = AppController.class.getSimpleName();
-
     private RequestQueue mRequestQueue;
-    private ImageLoader mImageLoader;
-
     private static AppController mInstance;
-
-    boolean isConnected;
-    private PendingIntent pendingIntent;
-    private AlarmManager manager;
-
 
     @Override
     public void onCreate() {
@@ -46,7 +37,7 @@ public class AppController extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        //   MultiDex.install(this);
+          MultiDex.install(this);
     }
 
     public void setConnectivityListener(ConnectivityReceiver.ConnectivityReceiverListener listener){

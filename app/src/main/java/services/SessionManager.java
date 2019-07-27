@@ -41,6 +41,7 @@ public class SessionManager {
         editor.putBoolean(IS_LOGIN, false);
         editor.remove(KEY_EMPID);
         editor.remove(KEY_PASSWORD);
+        editor.remove(KEY_EMPID);
 
         boolean isDataRemoved = editor.commit();
 

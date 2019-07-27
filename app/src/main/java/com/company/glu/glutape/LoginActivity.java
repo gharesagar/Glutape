@@ -1,20 +1,17 @@
-package com.example.administrator.glutape;
+package com.company.glu.glutape;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -29,11 +26,9 @@ import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,17 +37,16 @@ import services.ApiConstants;
 import services.AppController;
 import services.SessionManager;
 
-import static com.google.android.gms.common.internal.safeparcel.SafeParcelable.NULL;
-
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
     Button btLogin;
     EditText edtEmpId, edtPassword;
     String empId, password;
-    private boolean isConnected;
     ProgressDialog progress;
     SessionManager sessionManager;
+    private boolean isConnected;
+
 
     private void checkConnection() {
         isConnected = ConnectivityReceiver.isConnected(this);
@@ -109,13 +103,15 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void login() {
+
         final StringRequest stringRequest = new StringRequest(Request.Method.POST, ApiConstants.LOGIN, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
 
                     JSONObject jsonObject = new JSONObject(response);
-                    Boolean error = jsonObject.getBoolean("Error");
+
+                    boolean error = jsonObject.getBoolean("Error");
                     String msg = jsonObject.getString("Message");
 
                     if (error) {
@@ -145,12 +141,8 @@ public class LoginActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // parseVolleyError(error);
-                if (error.getMessage() == NULL) {
-                    Log.e(TAG, "Failed to retrieve data");
-                } else {
-                    Log.e(TAG, error.getMessage());
-                }
+                Log.e(TAG,error.toString());
+
                 progress.dismiss();
 
                 AlertDialog.Builder al = new AlertDialog.Builder(LoginActivity.this);
@@ -199,18 +191,4 @@ public class LoginActivity extends AppCompatActivity {
                 "Please wait..", true);
     }
 
-    public void parseVolleyError(VolleyError error) {
-        try {
-            // final String statusCode = String.valueOf(error.networkResponse.statusCode);
-            String responseBody = new String(error.networkResponse.data, "utf-8");
-            JSONObject data = new JSONObject(responseBody);
-            JSONArray errors = data.getJSONArray("errors");
-            JSONObject jsonMessage = errors.getJSONObject(0);
-            String message = jsonMessage.getString("message");
-            // Log.e(TAG,"statusCode ="+ statusCode+"  "+message);
-            Log.e(TAG, message);
-        } catch (JSONException e) {
-        } catch (UnsupportedEncodingException errorr) {
-        }
-    }
 }

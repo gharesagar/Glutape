@@ -1,36 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.administrator.glutape">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.company.glu.glutape">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- Needed only if your app targets Android 5.0 (API level 21) or higher. -->
-    <uses-feature android:name="android.hardware.location.gps" />
-
-
     <application
         android:name="services.AppController"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logogluetape"
         android:label="@string/app_name"
-        android:usesCleartextTraffic="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/logogluetape"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-
-        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
-        <activity android:name=".LoginActivity">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:appComponentFactory"
+        android:appComponentFactory="whateverString"
+        tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".SplashActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".CheckInCheckOutActivity" />
 
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
+        <activity android:name=".LoginActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".CheckInCheckOutActivity"
+            android:screenOrientation="portrait"/>
+
+<!--
         <receiver
             android:name="connectivity.ConnectivityReceiver"
             android:enabled="true">
@@ -38,11 +47,21 @@
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
+-->
 
-        <activity android:name=".SelectDisributerDealerActivity" />
-        <activity android:name=".CheckInDistributerActivity" android:noHistory="false">
+        <activity android:name=".SelectDisributerDealerActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".CheckInDistributerActivity"
+            android:noHistory="false"
+            android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".CheckInDealerActivity" android:noHistory="false"/>
+
+        <activity
+            android:name=".CheckInDealerActivity"
+            android:noHistory="false"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
